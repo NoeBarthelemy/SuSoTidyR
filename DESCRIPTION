@@ -1,0 +1,16 @@
+Package: SuSoTidyR
+Title: Tools for importing, tidying, and cleaning Survey Solutions data exports
+Version: 0.0.0.9000
+Authors@R: 
+    person("Noé", "Barthelemy", , "noe.barthelemy@hotmail.fr", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0001-5885-5181"))
+Description: (ENG) This package provides tools to import, structure, and clean data manually exported from the Survey Solutions software. It organizes both the survey results and metadata (nomenclature) in a tidy format for easy analysis and further manipulation. The package is designed to facilitate a clean, standardized workflow for Survey Solutions data handling.
+ (FR) Ce package propose des outils pour importer, structurer et nettoyer les données exportées manuellement depuis le logiciel Survey Solutions. Il organise à la fois les résultats de l’enquête et la nomenclature (métadonnées) en format tidy, facilitant ainsi l’analyse et les manipulations ultérieures. Le package est conçu pour standardiser et simplifier le flux de travail lié aux données de Survey Solutions.
+License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
+    license
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Imports: 
+    readxl,
+    stringr
