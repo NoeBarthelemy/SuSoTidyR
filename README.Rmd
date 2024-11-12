@@ -58,7 +58,7 @@ Installez le package directement depuis GitHub avec le package `remotes` :
 install.packages("remotes")
 
 # Install SuSoTidyR from GitHub / Installer SuSoTidyR depuis GitHub
-remotes::install_github("YourUsername/SuSoTidyR")
+remotes::install_github("noebarthelemy/SuSoTidyR")
 ```
 
 ## Usage / Utilisation
