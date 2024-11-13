@@ -53,7 +53,7 @@ Install the package directly from GitHub using the `remotes` package:
 
 Installez le package directement depuis GitHub avec le package `remotes` :
 
-```{r}
+```{r, results = "hide"}
 # If remotes is not installed / Si remotes n'est pas installé
 install.packages("remotes")
 
