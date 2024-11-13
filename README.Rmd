@@ -75,9 +75,11 @@ Utilisez `import_metadata` pour charger les métadonnées de *Survey Solutions* 
 
 ```{r}
 library(SuSoTidyR)
+library(tidyverse)
+library(here)
 
 # Path to exported metadata folder / Chemin vers le dossier de métadonnées exportées
-metadata <- import_metadata("path/to/exported/data")
+metadata <- import_metadata(here("example_data"))
 head(metadata)
 
 ```
@@ -90,7 +92,7 @@ Utilisez `import_results` pour importer les résultats de l'enquête, y compris 
 
 ```{r}
 # Import results with rosters / Importer les résultats avec les rosters
-results <- import_results("ESS2024", Importer_Rosters = TRUE, Importer_AssignmentsValues = TRUE)
+results <- import_results("ESS_2024", Importer_Rosters = TRUE, Importer_AssignmentsValues = TRUE, dossier_resultats = here("example_data"))
 head(results)
 
 ```
@@ -103,12 +105,16 @@ Lorsque des questions de type liste sont configurées sans limites de nombre de 
 
 ```{r}
 # Clean unnecessary columns in results / Nettoyer les colonnes indésirables du tableau de résultats
-results_clean <- results %>%
+ESS_2024_clean <- ESS_2024 %>%
+  clean_lists()
+
+# Clean some roster data / Nettoyer les colonnes indésirables du tableau de résultats d'un des rosters : 
+ESS_2024_Roster_AvantApres_clean <- ESS_2024_Roster_AvantApres %>%
   clean_lists()
 
 # Clean the metadata based on removed columns / Nettoyer la nomenclature en fonction des colonnes supprimées
 nomenclature_clean <- metadata %>%
-  clean_lists(data = results_clean)
+  clean_lists(data = list(ESS_2024_clean, ESS_2024_Roster_AvantApres_clean))
 
 ```
 
@@ -120,7 +126,7 @@ Certaines valeurs comme `-999999999` ou `##N/A##` peuvent être utilisées pour 
 
 ```{r}
 # Replace specific missing values with NA / Remplacer les valeurs manquantes spécifiques par NA
-results_NA_clean <- results_clean %>%
+ESS_2024_NA_clean <- ESS_2024_clean %>%
   replace_na_values()
 
 ```
@@ -131,9 +137,9 @@ To make the data more interpretable, replace coded values in the results table w
 
 Pour faciliter l’interprétation, vous pouvez remplacer les valeurs codées dans le tableau de résultats par les labels associés à partir de la nomenclature.
 
-```{r}
+```{r, warning= FALSE}
 # Replace coded values with labels / Remplacer les valeurs codées par leurs labels
-results_labeled <- results_NA_clean %>%
+ESS_2024_labeled <- ESS_2024_NA_clean %>%
   values_to_labels(nomenclature_clean, columns = "all")
 
 ```
@@ -148,7 +154,7 @@ Voici un exemple complet de flux de travail avec **SuSoTidyR** :
 library(SuSoTidyR)
 
 # Import metadata / Importer les métadonnées
-metadata <- import_metadata("path/to/exported/data")
+metadata <- import_metadata("example_data")
 
 # Import survey results / Importer les résultats de l'enquête
 results <- import_results("ESS2024", Importer_Rosters = TRUE, Importer_AssignmentsValues = TRUE)
