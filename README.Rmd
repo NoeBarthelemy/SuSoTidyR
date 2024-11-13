@@ -112,9 +112,16 @@ ESS_2024_clean <- ESS_2024 %>%
 ESS_2024_Roster_AvantApres_clean <- ESS_2024_Roster_AvantApres %>%
   clean_lists()
 
+
+
+
 # Clean the metadata based on removed columns / Nettoyer la nomenclature en fonction des colonnes supprimées
+
+# WARNING : USE THE NON CLEANED VERSION OF THE DATASET (ESS_2024 and not ESS_2024_clean) OTHERWISE THIS WILL NOT WORK. 
+# ATTENTION : UTILISEZ LA VERSION NON NETTOYEE DU JEU DE DONNEES (ESS_2024 ET NON PAS ESS_2024_clean) SINON CELA NE FONCTIONNERA PAS : 
+
 nomenclature_clean <- metadata %>%
-  clean_lists(data = list(ESS_2024_clean, ESS_2024_Roster_AvantApres_clean))
+  clean_lists(data = list(ESS_2024, ESS_2024_Roster_AvantApres))
 
 ```
 
@@ -152,27 +159,37 @@ Voici un exemple complet de flux de travail avec **SuSoTidyR** :
 
 ```{r}
 library(SuSoTidyR)
+library(tidyverse)
+library(here)
 
-# Import metadata / Importer les métadonnées
-metadata <- import_metadata("example_data")
+# Path to exported metadata folder / Chemin vers le dossier de métadonnées exportées
+metadata <- import_metadata(here("example_data"))
 
-# Import survey results / Importer les résultats de l'enquête
-results <- import_results("ESS2024", Importer_Rosters = TRUE, Importer_AssignmentsValues = TRUE)
+# Import results with rosters / Importer les résultats avec les rosters
+results <- import_results("ESS_2024", Importer_Rosters = TRUE, Importer_AssignmentsValues = TRUE, dossier_resultats = here("example_data"))
 
-# Clean unnecessary columns / Nettoyer les colonnes indésirables
-results_clean <- results %>%
+# Clean unnecessary columns in results / Nettoyer les colonnes indésirables du tableau de résultats
+ESS_2024_clean <- ESS_2024 %>%
   clean_lists()
 
-# Clean metadata based on removed columns / Nettoyer la nomenclature en fonction des colonnes supprimées
+# Clean some roster data / Nettoyer les colonnes indésirables du tableau de résultats d'un des rosters : 
+ESS_2024_Roster_AvantApres_clean <- ESS_2024_Roster_AvantApres %>%
+  clean_lists()
+
+# Clean the metadata based on removed columns / Nettoyer la nomenclature en fonction des colonnes supprimées
+
+# WARNING : USE THE NON CLEANED VERSION OF THE DATASET (ESS_2024 and not ESS_2024_clean) OTHERWISE THIS WILL NOT WORK. 
+# ATTENTION : UTILISEZ LA VERSION NON NETTOYEE DU JEU DE DONNEES (ESS_2024 ET NON PAS ESS_2024_clean) SINON CELA NE FONCTIONNERA PAS : 
+
 nomenclature_clean <- metadata %>%
-  clean_lists(data = results_clean)
+  clean_lists(data = list(ESS_2024, ESS_2024_Roster_AvantApres))
 
 # Replace specific missing values with NA / Remplacer les valeurs manquantes spécifiques par NA
-results_NA_clean <- results_clean %>%
+ESS_2024_NA_clean <- ESS_2024_clean %>%
   replace_na_values()
 
 # Replace coded values with labels / Remplacer les valeurs codées par leurs labels
-results_labeled <- results_NA_clean %>%
+ESS_2024_labeled <- ESS_2024_NA_clean %>%
   values_to_labels(nomenclature_clean, columns = "all")
 
 ```
