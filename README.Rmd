@@ -165,8 +165,14 @@ library(here)
 # Path to exported metadata folder / Chemin vers le dossier de métadonnées exportées
 metadata <- import_metadata(here("example_data"))
 
-# Import results with rosters / Importer les résultats avec les rosters
-results <- import_results("ESS_2024", Importer_Rosters = TRUE, Importer_AssignmentsValues = TRUE, dossier_resultats = here("example_data"))
+# Import results with rosters etc / Importer les résultats avec les rosters etc
+import_results(
+  Variable_Questionnaire = "ESS_2024",
+  Importer_Rosters = TRUE,
+  Importer_AssignmentsValues = TRUE,
+  Importer_InterviewsValues = TRUE,
+  dossier_resultats = here("example_data")
+)
 
 # Clean unnecessary columns in results / Nettoyer les colonnes indésirables du tableau de résultats
 ESS_2024_clean <- ESS_2024 %>%

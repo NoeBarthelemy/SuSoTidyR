@@ -4,10 +4,11 @@
 #' **Français :** Cette fonction importe les métadonnées provenant des données exportées par Survey Solutions,
 #' organise les labels de variables et de valeurs dans un format tidy, et remplace éventuellement
 #' les labels existants par ceux provenant de fichiers de catégories supplémentaires, si disponibles.
+#' Elle inclut un module de détection d'encodage pour garantir la compatibilité des caractères spéciaux.
 #'
 #' **English :** This function imports metadata from Survey Solutions exported data, organizes
 #' variable and value labels in a tidy format, and optionally replaces existing labels with those from
-#' additional category files if available.
+#' additional category files if available. It includes an encoding detection module to ensure compatibility with special characters.
 #'
 #' @param dossier
 #' **Français :** Un caractère spécifiant le chemin vers le dossier contenant les fichiers `.do`
@@ -25,13 +26,19 @@
 #' **Français :** La fonction traite les fichiers `.do` dans le dossier spécifié pour extraire les labels de
 #' variables et de valeurs. Elle recherche également un fichier `content.zip` dans le sous-dossier
 #' `Questionnaire` pour remplacer les labels par ceux des fichiers de catégories s'ils correspondent
-#' aux labels de variables exportés.
+#' aux labels de variables exportés. Un module de détection et de conversion d'encodage a été ajouté pour
+#' lire les fichiers `.do` avec l'encodage détecté et les convertir en UTF-8, garantissant ainsi une bonne gestion
+#' des caractères spéciaux.
+#'
 #' **English :** The function processes `.do` files in the specified folder to extract variable and value labels.
 #' It also looks for a `content.zip` file within the `Questionnaire` subfolder to replace labels with those
-#' from category files if they match the exported variable labels.
+#' from category files if they match the exported variable labels. An encoding detection and conversion module
+#' has been added to read `.do` files with the detected encoding and convert them to UTF-8, ensuring proper handling
+#' of special characters.
 #'
 #' @importFrom stringr str_match_all
 #' @importFrom readxl read_excel
+#' @importFrom readr guess_encoding
 #'
 #' @examples
 #' \dontrun{
@@ -41,6 +48,7 @@
 #' }
 #'
 #' @export
+
 import_metadata <- function(dossier) {
   # Afficher un message au lancement
   message("Démarrage de l'importation des nomenclatures... Cela peut prendre quelques minutes.")
@@ -54,11 +62,30 @@ import_metadata <- function(dossier) {
   if (!requireNamespace("stringr", quietly = TRUE)) {
     stop("Le package 'stringr' est requis mais n'est pas installé.")
   }
+  if (!requireNamespace("readr", quietly = TRUE)) {
+    stop("Le package 'readr' est requis mais n'est pas installé.")
+  }
   if (!requireNamespace("readxl", quietly = TRUE)) {
     warning("Le package 'readxl' est requis mais n'est pas installé. Impossible de compléter les labels manquants depuis les catégories.")
     readxl_installed <- FALSE
   } else {
     readxl_installed <- TRUE
+  }
+
+  # Fonction de lecture avec détection et conversion d'encodage
+  read_file_with_encoding <- function(file_path) {
+    # Détecter l'encodage
+    detected_encoding <- tryCatch({
+      enc <- readr::guess_encoding(file_path, n_max = 1000)$encoding[1]
+      if (is.na(enc)) enc <- "UTF-8" # Utiliser UTF-8 par défaut si non détecté
+      enc
+    }, error = function(e) "UTF-8") # Utiliser UTF-8 en cas d'erreur
+
+    # Lire le fichier avec l'encodage détecté
+    content <- readLines(file_path, encoding = detected_encoding, warn = FALSE)
+    # Convertir en UTF-8 si nécessaire
+    content <- iconv(content, from = detected_encoding, to = "UTF-8")
+    return(paste(content, collapse = "\n"))
   }
 
   # Lister tous les fichiers .do dans le dossier
@@ -70,10 +97,9 @@ import_metadata <- function(dossier) {
     return(NULL)
   }
 
-  # Lire tous les fichiers .do et stocker le contenu dans une liste
+  # Lire tous les fichiers .do avec encodage détecté et stocker le contenu dans une liste
   contenus <- lapply(fichiers_do, function(fichier) {
-    contenu <- readLines(fichier, warn = FALSE)
-    paste(contenu, collapse = "\n")
+    read_file_with_encoding(fichier)
   })
   names(contenus) <- fichiers_do
 
@@ -128,38 +154,28 @@ import_metadata <- function(dossier) {
     }
   }
 
-  # Combiner les listes en data frames
+  # Rassemblement des résultats dans un tableau 'tidy'
   value_labels_df <- do.call(rbind, value_labels_list)
   variable_labels_df <- do.call(rbind, variable_labels_list)
   variable_value_labels_df <- do.call(rbind, variable_value_labels_list)
 
-  # Fusion des dataframes pour obtenir un tableau 'tidy'
   variable_with_values_df <- merge(variable_labels_df, variable_value_labels_df,
                                    by=c('chemin', 'fichier', 'variable_name'), all.y=TRUE)
   variable_with_values_df <- merge(variable_with_values_df, value_labels_df,
                                    by=c('chemin', 'fichier', 'label_name'), all.x=TRUE)
 
-  # Pour les variables sans labels de valeur
-  variables_without_values <- setdiff(variable_labels_df$variable_name,
-                                      variable_with_values_df$variable_name)
-  variables_without_values_df <- variable_labels_df[variable_labels_df$variable_name %in%
-                                                      variables_without_values,]
+  variables_without_values <- setdiff(variable_labels_df$variable_name, variable_with_values_df$variable_name)
+  variables_without_values_df <- variable_labels_df[variable_labels_df$variable_name %in% variables_without_values,]
   variables_without_values_df$value <- NA
   variables_without_values_df$value_label <- NA
 
-  # Combinaison des deux dataframes
   tidy_nomenclature <- rbind(
     variable_with_values_df[, c('chemin', 'fichier', 'variable_name', 'variable_label', 'value', 'value_label')],
     variables_without_values_df[, c('chemin', 'fichier', 'variable_name', 'variable_label', 'value', 'value_label')]
   )
 
-  # Ajouter la colonne 'parentvalue' à tidy_nomenclature si elle n'existe pas
-  if (!'parentvalue' %in% colnames(tidy_nomenclature)) {
-    tidy_nomenclature$parentvalue <- NA
-  }
-
   # --------------------------------------------------------------------
-  # Nouvelle fonctionnalité : Remplacer les labels existants par ceux des catégories
+  # Nouvelle fonctionnalité : Compléter les labels manquants à partir des catégories
   # --------------------------------------------------------------------
 
   if (readxl_installed) {
@@ -234,6 +250,14 @@ import_metadata <- function(dossier) {
                 stringsAsFactors = FALSE
               )
 
+              # **Assurer que 'parentvalue' existe dans 'tidy_nomenclature'**
+              if (!'parentvalue' %in% colnames(tidy_nomenclature)) {
+                tidy_nomenclature$parentvalue <- NA
+              }
+
+              # **Réordonner les colonnes de 'df_ajoutes' pour correspondre à 'tidy_nomenclature'**
+              df_ajoutes <- df_ajoutes[, colnames(tidy_nomenclature)]
+
               # Ajouter au tidy_nomenclature
               tidy_nomenclature <- rbind(tidy_nomenclature, df_ajoutes)
 
@@ -258,3 +282,4 @@ import_metadata <- function(dossier) {
   # Retourner le tableau 'tidy_nomenclature' mis à jour
   return(tidy_nomenclature)
 }
+
