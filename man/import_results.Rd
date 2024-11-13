@@ -16,16 +16,16 @@ import_results(
 \item{Variable_Questionnaire}{\strong{Français :} Nom de la variable du questionnaire (ex. "ESS2024").
 \strong{English :} Name of the questionnaire variable (e.g., "ESS2024").}
 
-\item{import_Rosters}{\strong{Français :} Si TRUE, importe tous les rosters (par défaut TRUE).
+\item{Importer_Rosters}{\strong{Français :} Si TRUE, importe tous les rosters (par défaut TRUE).
 \strong{English :} If TRUE, imports all rosters (default TRUE).}
 
-\item{import_AssignmentsValues}{\strong{Français :} Si TRUE, importe \code{assignment__actions.tab} (par défaut FALSE).
+\item{Importer_AssignmentsValues}{\strong{Français :} Si TRUE, importe \code{assignment__actions.tab} (par défaut FALSE).
 \strong{English :} If TRUE, imports \code{assignment__actions.tab} (default FALSE).}
 
-\item{import_InterviewsValues}{\strong{Français :} Si TRUE, importe les fichiers \code{interview__*.tab} (par défaut FALSE).
+\item{Importer_InterviewsValues}{\strong{Français :} Si TRUE, importe les fichiers \code{interview__*.tab} (par défaut FALSE).
 \strong{English :} If TRUE, imports \code{interview__*.tab} files (default FALSE).}
 
-\item{results_folder}{\strong{Français :} Chemin vers le dossier contenant les fichiers \code{.tab} (par défaut ".").
+\item{dossier_resultats}{\strong{Français :} Chemin vers le dossier contenant les fichiers \code{.tab} (par défaut ".").
 \strong{English :} Path to the folder containing \code{.tab} files (default ".").}
 }
 \value{
@@ -36,26 +36,32 @@ import_results(
 \strong{Français :} Cette fonction importe les résultats d'enquête exportés depuis Survey Solutions.
 Elle charge les fichiers de données principaux, ainsi que les fichiers de données associés
 (rosters, assignments, interviews) si spécifié, et crée des data frames dans l'environnement global.
+Un module de détection d'encodage est intégré pour assurer une lecture correcte des caractères spéciaux.
 
 \strong{English :} This function imports survey results exported from Survey Solutions. It loads
 main survey data files, as well as associated data files (rosters, assignments, interviews) if specified,
-creating data frames in the global environment.
+creating data frames in the global environment. An encoding detection module is included to ensure
+correct reading of special characters.
 }
 \details{
 \strong{Français :} La fonction importe le fichier principal du questionnaire spécifié, puis importe
 les fichiers associés (rosters, assignments, interviews) en fonction des paramètres. Les données sont
-chargées sous forme de data frames dans l'environnement global.
+chargées sous forme de data frames dans l'environnement global. Un module de détection d'encodage
+analyse chaque fichier pour détecter son encodage et convertir le contenu en UTF-8, garantissant ainsi
+une bonne gestion des caractères spéciaux.
 
 \strong{English :} The function imports the main questionnaire file specified, then imports associated files
 (rosters, assignments, interviews) based on the parameters. Data is loaded as data frames in the global environment.
+An encoding detection module analyzes each file to detect its encoding and converts the content to UTF-8,
+ensuring proper handling of special characters.
 }
 \examples{
 \dontrun{
 # Exemple en français :
-import_results("ESS2024", import_Rosters = TRUE, import_AssignmentsValues = TRUE)
+import_results("ESS2024", Importer_Rosters = TRUE, Importer_AssignmentsValues = TRUE)
 
 # English example:
-import_results("ESS2024", import_Rosters = TRUE, import_AssignmentsValues = TRUE)
+import_results("ESS2024", Importer_Rosters = TRUE, Importer_AssignmentsValues = TRUE)
 }
 
 }

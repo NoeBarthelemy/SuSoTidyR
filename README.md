@@ -66,16 +66,13 @@ Installez le package directement depuis GitHub avec le package `remotes`
 ``` r
 # If remotes is not installed / Si remotes n'est pas installé
 install.packages("remotes")
-#> Installation du package dans 'C:/Users/noe.barthelemy/AppData/Local/Temp/Rtmp6rVoZY/temp_libpathf941488366a'
+#> Installation du package dans 'C:/Users/noe.barthelemy/AppData/Local/Temp/RtmpsvJ74i/temp_libpath495c6808196f'
 #> (car 'lib' n'est pas spécifié)
 
 # Install SuSoTidyR from GitHub / Installer SuSoTidyR depuis GitHub
 remotes::install_github("noebarthelemy/SuSoTidyR")
 #> Downloading GitHub repo noebarthelemy/SuSoTidyR@HEAD
-#> Installing 1 packages: glue
-#> Installation du package dans 'C:/Users/noe.barthelemy/AppData/Local/Temp/Rtmp6rVoZY/temp_libpathf941488366a'
-#> (car 'lib' n'est pas spécifié)
-#> Installation du package dans 'C:/Users/noe.barthelemy/AppData/Local/Temp/Rtmp6rVoZY/temp_libpathf941488366a'
+#> Installation du package dans 'C:/Users/noe.barthelemy/AppData/Local/Temp/RtmpsvJ74i/temp_libpath495c6808196f'
 #> (car 'lib' n'est pas spécifié)
 ```
 
@@ -133,7 +130,14 @@ nom de la variable de questionnaire et les fichiers à importer.
 
 ``` r
 # Import results with rosters / Importer les résultats avec les rosters
-results <- import_results("ESS_2024", Importer_Rosters = TRUE, Importer_AssignmentsValues = TRUE, dossier_resultats = here("example_data"))
+# Import results with rosters etc / Importer les résultats avec les rosters etc
+import_results(
+  Variable_Questionnaire = "ESS_2024",
+  Importer_Rosters = TRUE,
+  Importer_AssignmentsValues = TRUE,
+  Importer_InterviewsValues = TRUE,
+  dossier_resultats = here("example_data")
+)
 #> Importation terminée.
 #> Nombre de rosters importés : 6 
 #> Fichiers importés avec succès :
@@ -145,9 +149,11 @@ results <- import_results("ESS_2024", Importer_Rosters = TRUE, Importer_Assignme
 #> -  \\isee.local/public/utilisateurs/USER/Noe.Barthelemy/Noe_Barthelemy_ISEE/R/SuSoTidyR/example_data/S3_RosterDuree.tab 
 #> -  \\isee.local/public/utilisateurs/USER/Noe.Barthelemy/Noe_Barthelemy_ISEE/R/SuSoTidyR/example_data/S3_RosterImpacts.tab 
 #> -  \\isee.local/public/utilisateurs/USER/Noe.Barthelemy/Noe_Barthelemy_ISEE/R/SuSoTidyR/example_data/assignment__actions.tab 
+#> -  \\isee.local/public/utilisateurs/USER/Noe.Barthelemy/Noe_Barthelemy_ISEE/R/SuSoTidyR/example_data/interview__actions.tab 
+#> -  \\isee.local/public/utilisateurs/USER/Noe.Barthelemy/Noe_Barthelemy_ISEE/R/SuSoTidyR/example_data/interview__comments.tab 
+#> -  \\isee.local/public/utilisateurs/USER/Noe.Barthelemy/Noe_Barthelemy_ISEE/R/SuSoTidyR/example_data/interview__diagnostics.tab 
+#> -  \\isee.local/public/utilisateurs/USER/Noe.Barthelemy/Noe_Barthelemy_ISEE/R/SuSoTidyR/example_data/interview__errors.tab 
 #> Tous les fichiers ont été importés avec succès.
-head(results)
-#> NULL
 ```
 
 ### 3. Clean Unnecessary Columns / Nettoyer les Colonnes Indésirables
@@ -169,9 +175,8 @@ ESS_2024_clean <- ESS_2024 %>%
   clean_lists()
 
 # Clean some roster data / Nettoyer les colonnes indésirables du tableau de résultats d'un des rosters : 
-ESS_2024_Roster_AvantApres_clean <- ESS_2024_Roster_AvantApres %>%
+ESS_2024_Roster_leviers_clean <- ESS_2024_Roster_leviers %>%
   clean_lists()
-
 
 
 
@@ -234,8 +239,14 @@ metadata <- import_metadata(here("example_data"))
 #> Variable S1AD_COM a été remplacée par les libellés de la catégorie.
 #> Variable S1CONT_FONCTION a été remplacée par les libellés de la catégorie.
 
-# Import results with rosters / Importer les résultats avec les rosters
-results <- import_results("ESS_2024", Importer_Rosters = TRUE, Importer_AssignmentsValues = TRUE, dossier_resultats = here("example_data"))
+# Import results with rosters etc / Importer les résultats avec les rosters etc
+import_results(
+  Variable_Questionnaire = "ESS_2024",
+  Importer_Rosters = TRUE,
+  Importer_AssignmentsValues = TRUE,
+  Importer_InterviewsValues = TRUE,
+  dossier_resultats = here("example_data")
+)
 
 # Clean unnecessary columns in results / Nettoyer les colonnes indésirables du tableau de résultats
 ESS_2024_clean <- ESS_2024 %>%

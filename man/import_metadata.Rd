@@ -22,19 +22,25 @@ leurs labels, ainsi que les labels associés aux valeurs.
 \strong{Français :} Cette fonction importe les métadonnées provenant des données exportées par Survey Solutions,
 organise les labels de variables et de valeurs dans un format tidy, et remplace éventuellement
 les labels existants par ceux provenant de fichiers de catégories supplémentaires, si disponibles.
+Elle inclut un module de détection d'encodage pour garantir la compatibilité des caractères spéciaux.
 
 \strong{English :} This function imports metadata from Survey Solutions exported data, organizes
 variable and value labels in a tidy format, and optionally replaces existing labels with those from
-additional category files if available.
+additional category files if available. It includes an encoding detection module to ensure compatibility with special characters.
 }
 \details{
 \strong{Français :} La fonction traite les fichiers \code{.do} dans le dossier spécifié pour extraire les labels de
 variables et de valeurs. Elle recherche également un fichier \code{content.zip} dans le sous-dossier
 \code{Questionnaire} pour remplacer les labels par ceux des fichiers de catégories s'ils correspondent
-aux labels de variables exportés.
+aux labels de variables exportés. Un module de détection et de conversion d'encodage a été ajouté pour
+lire les fichiers \code{.do} avec l'encodage détecté et les convertir en UTF-8, garantissant ainsi une bonne gestion
+des caractères spéciaux.
+
 \strong{English :} The function processes \code{.do} files in the specified folder to extract variable and value labels.
 It also looks for a \code{content.zip} file within the \code{Questionnaire} subfolder to replace labels with those
-from category files if they match the exported variable labels.
+from category files if they match the exported variable labels. An encoding detection and conversion module
+has been added to read \code{.do} files with the detected encoding and convert them to UTF-8, ensuring proper handling
+of special characters.
 }
 \examples{
 \dontrun{
