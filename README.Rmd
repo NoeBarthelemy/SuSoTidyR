@@ -142,7 +142,7 @@ ESS_2024_NA_clean <- ESS_2024_clean %>%
 
 ```
 
-### 5. Replace Coded Values with Labels / Remplacer les Valeurs Codées par leurs Labels
+### 5. Replace coded values with labels / Remplacer les valeurs codées par leurs labels
 
 To make the data more interpretable, replace coded values in the results table with their associated labels from the metadata.
 
@@ -201,7 +201,6 @@ ESS_2024_NA_clean <- ESS_2024_clean %>%
 # Replace coded values with labels / Remplacer les valeurs codées par leurs labels
 ESS_2024_labeled <- ESS_2024_NA_clean %>%
   values_to_labels(nomenclature_clean, columns = "all")
-
 ```
 
 ## Contributions
