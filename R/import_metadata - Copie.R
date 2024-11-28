@@ -2,32 +2,25 @@
 #'
 #' @description
 #' **Français :** Cette fonction importe les métadonnées provenant des données exportées par Survey Solutions,
-#' organise les labels de variables et de valeurs dans un format *tidy*, et remplace éventuellement
+#' organise les labels de variables et de valeurs dans un format tidy, et remplace éventuellement
 #' les labels existants par ceux provenant de fichiers de catégories supplémentaires, si disponibles.
 #' Elle inclut un module de détection d'encodage pour garantir la compatibilité des caractères spéciaux.
-#' De plus, elle établit les relations hiérarchiques entre les variables en utilisant la structure du questionnaire
-#' définie dans le fichier `document.json`, permettant ainsi de lier les variables enfants à leurs variables parentes.
 #'
-#' **English:** This function imports metadata from Survey Solutions exported data, organizes
+#' **English :** This function imports metadata from Survey Solutions exported data, organizes
 #' variable and value labels in a tidy format, and optionally replaces existing labels with those from
 #' additional category files if available. It includes an encoding detection module to ensure compatibility with special characters.
-#' Additionally, it establishes hierarchical relationships between variables using the questionnaire structure
-#' defined in the `document.json` file, enabling the linking of child variables to their parent variables.
 #'
 #' @param dossier
 #' **Français :** Un caractère spécifiant le chemin vers le dossier contenant les fichiers `.do`
 #' exportés depuis Survey Solutions, ainsi que des fichiers supplémentaires optionnels dans
 #' `Questionnaire/content.zip`.
-#'
-#' **English:** A character string specifying the path to the folder containing `.do` files
+#' **English :** A character string specifying the path to the folder containing `.do` files
 #' exported from Survey Solutions and optional additional files in the `Questionnaire/content.zip`.
 #'
 #' @return
-#' **Français :** Un data frame structuré (*tidy*) contenant les métadonnées, incluant les noms de variables,
-#' leurs labels, les labels associés aux valeurs, et les relations hiérarchiques entre variables via la colonne `parent_variable`.
-#'
-#' **English:** A tidy data frame with metadata, including variable names, labels, associated value labels,
-#' and hierarchical relationships between variables through the `parent_variable` column.
+#' **Français :** Un data frame structuré (tidy) contenant les métadonnées, incluant les noms de variables,
+#' leurs labels, ainsi que les labels associés aux valeurs.
+#' **English :** A tidy data frame with metadata, including variable names, labels, and associated value labels.
 #'
 #' @details
 #' **Français :** La fonction traite les fichiers `.do` dans le dossier spécifié pour extraire les labels de
@@ -37,25 +30,15 @@
 #' lire les fichiers `.do` avec l'encodage détecté et les convertir en UTF-8, garantissant ainsi une bonne gestion
 #' des caractères spéciaux.
 #'
-#' En outre, la fonction établit les liens entre les variables enfants et leurs variables parentes en utilisant le fichier `document.json`
-#' contenu dans `content.zip`. Elle extrait la structure hiérarchique du questionnaire, y compris les relations définies par `CascadeFromQuestionId`
-#' et `PublicKey`. La fonction est capable de parcourir des structures JSON complexes, y compris des data frames imbriqués,
-#' pour extraire toutes les questions et leurs relations.
-#'
-#' **English:** The function processes `.do` files in the specified folder to extract variable and value labels.
+#' **English :** The function processes `.do` files in the specified folder to extract variable and value labels.
 #' It also looks for a `content.zip` file within the `Questionnaire` subfolder to replace labels with those
 #' from category files if they match the exported variable labels. An encoding detection and conversion module
 #' has been added to read `.do` files with the detected encoding and convert them to UTF-8, ensuring proper handling
 #' of special characters.
 #'
-#' Additionally, the function establishes links between child variables and their parent variables using the `document.json` file
-#' contained within `content.zip`. It extracts the hierarchical structure of the questionnaire, including relationships defined by `CascadeFromQuestionId`
-#' and `PublicKey`. The function can traverse complex JSON structures, including nested data frames, to extract all questions and their relationships.
-#'
 #' @importFrom stringr str_match_all
 #' @importFrom readxl read_excel
 #' @importFrom readr guess_encoding
-#' @importFrom jsonlite fromJSON
 #'
 #' @examples
 #' \dontrun{
@@ -65,7 +48,6 @@
 #' }
 #'
 #' @export
-
 
 import_metadata <- function(dossier) {
   # Afficher un message au lancement
@@ -88,12 +70,6 @@ import_metadata <- function(dossier) {
     readxl_installed <- FALSE
   } else {
     readxl_installed <- TRUE
-  }
-  if (!requireNamespace("jsonlite", quietly = TRUE)) {
-    warning("Le package 'jsonlite' est requis mais n'est pas installé. Impossible d'établir le lien entre les questions parentes et enfants.")
-    jsonlite_installed <- FALSE
-  } else {
-    jsonlite_installed <- TRUE
   }
 
   # Fonction de lecture avec détection et conversion d'encodage
@@ -285,6 +261,12 @@ import_metadata <- function(dossier) {
               # Ajouter au tidy_nomenclature
               tidy_nomenclature <- rbind(tidy_nomenclature, df_ajoutes)
 
+              # Afficher le message indiquant que la variable a été remplacée
+              message(paste("Variable", var_name, "a été remplacée par les libellés de la catégorie."))
+              # Afficher les libellés ajoutés pour cette variable
+              labels_var <- df_ajoutes[, c('value', 'value_label', 'parentvalue')]
+              print(labels_var)
+
               break  # Sortir de la boucle des fichiers de catégories pour cette variable
             }
           }  # Fin de la boucle sur les fichiers de catégories
@@ -297,154 +279,7 @@ import_metadata <- function(dossier) {
     }
   }
 
-  # --------------------------------------------------------------------
-  # Ajout de la colonne 'parent_variable' en utilisant 'document.json'
-  # --------------------------------------------------------------------
-
-  # Vérifier si 'parentvalue' contient des valeurs non-NA
-  if (any(!is.na(tidy_nomenclature$parentvalue))) {
-    # Chemin vers 'content.zip' dans le dossier 'Questionnaire'
-    content_zip_path <- file.path(dossier, "Questionnaire", "content.zip")
-
-    if (!file.exists(content_zip_path)) {
-      warning(sprintf(
-        "Nous avons détecté que votre questionnaire utilise des catégories et des sous-catégories, mais le fichier content.zip, qui contient la structure du questionnaire, n'a pas été trouvé dans le répertoire %s/Questionnaire/. Cela empêche cette fonction d'établir le lien entre les catégories parentes et les catégories enfants. Veuillez corriger cela.",
-        dossier
-      ))
-    } else {
-      # Extraire 'document.json' du 'content.zip'
-      temp_dir <- tempdir()
-      unzip(content_zip_path, files = "document.json", exdir = temp_dir)
-
-      document_json_path <- file.path(temp_dir, "document.json")
-
-      if (!file.exists(document_json_path)) {
-        warning("Le fichier 'document.json' n'a pas été trouvé dans 'content.zip'.")
-      } else if (jsonlite_installed) {
-        # Charger 'document.json' sans 'flatten = TRUE' pour préserver la structure hiérarchique
-        document <- jsonlite::fromJSON(document_json_path, flatten = FALSE)
-
-        # Déterminer où les questions sont stockées
-        if (!is.null(document$Children)) {
-          document_children <- document$Children
-          print("Utilisation de 'document$Children'")
-        } else if (!is.null(document$Questionnaire$Children)) {
-          document_children <- document$Questionnaire$Children
-          print("Utilisation de 'document$Questionnaire$Children'")
-        } else {
-          stop("Impossible de trouver 'Children' dans 'document.json'")
-        }
-
-        # Fonction récursive pour extraire les questions
-        extract_questions <- function(questions_list) {
-          result <- data.frame(
-            VariableName = character(),
-            PublicKey = character(),
-            CascadeFromQuestionId = character(),
-            stringsAsFactors = FALSE
-          )
-
-          # Si 'questions_list' est un data frame
-          if (is.data.frame(questions_list)) {
-            for (i in seq_len(nrow(questions_list))) {
-              q <- questions_list[i, ]
-              # Traiter chaque question ou groupe
-              if (!is.null(q$`$type`)) {
-                if (q$`$type` == "Group") {
-                  # Si c'est un groupe, parcourir récursivement ses enfants
-                  if (!is.null(q$Children[[1]])) {
-                    result <- rbind(result, extract_questions(q$Children[[1]]))
-                  }
-                } else {
-                  # Sinon, c'est une question
-                  VariableName <- ifelse(is.null(q$VariableName), NA, q$VariableName)
-                  PublicKey <- ifelse(is.null(q$PublicKey), NA, q$PublicKey)
-                  CascadeFromQuestionId <- ifelse(is.null(q$CascadeFromQuestionId), NA, q$CascadeFromQuestionId)
-                  result <- rbind(result, data.frame(
-                    VariableName = VariableName,
-                    PublicKey = PublicKey,
-                    CascadeFromQuestionId = CascadeFromQuestionId,
-                    stringsAsFactors = FALSE
-                  ))
-                }
-              }
-            }
-          } else if (is.list(questions_list)) {
-            # Si 'questions_list' est une liste
-            for (q in questions_list) {
-              # Vérifier que 'q' est une liste ou un data frame
-              if (is.list(q) || is.data.frame(q)) {
-                result <- rbind(result, extract_questions(q))
-              }
-            }
-          }
-          return(result)
-        }
-
-        # Extraire les questions en commençant par 'document_children'
-        if (!is.null(document_children) && length(document_children) > 0) {
-          questions_df <- extract_questions(document_children)
-
-          # Après l'extraction de questions_df
-          print("Contenu de questions_df :")
-          print(questions_df)
-
-          # Supprimer les lignes où 'VariableName' est NA
-          questions_df <- questions_df[!is.na(questions_df$VariableName), ]
-
-          # Afficher les VariableName extraits
-          print("VariableName extraits :")
-          print(unique(questions_df$VariableName))
-
-          # Supprimer les espaces blancs et uniformiser la casse
-          questions_df$VariableName <- trimws(questions_df$VariableName)
-          questions_df$PublicKey <- trimws(tolower(questions_df$PublicKey))
-          questions_df$CascadeFromQuestionId <- trimws(tolower(questions_df$CascadeFromQuestionId))
-
-          # Créer le mapping entre 'PublicKey' et 'VariableName'
-          key_to_varname <- setNames(questions_df$VariableName, questions_df$PublicKey)
-          names(key_to_varname) <- tolower(names(key_to_varname))
-
-          print("Mapping PublicKey vers VariableName :")
-          print(key_to_varname)
-
-          # Ajouter la colonne 'parent_variable' à 'tidy_nomenclature'
-          tidy_nomenclature$parent_variable <- NA
-
-          # Variables avec 'parentvalue' non-NA
-          variables_with_parentvalue <- unique(tidy_nomenclature$variable_name[!is.na(tidy_nomenclature$parentvalue)])
-          # Supprimer les espaces blancs
-          variables_with_parentvalue <- trimws(variables_with_parentvalue)
-
-          print("Variables avec parentvalue non-NA :")
-          print(variables_with_parentvalue)
-
-          # Boucle de correspondance avec débogage
-          for (var in variables_with_parentvalue) {
-            print(sprintf("Traitement de la variable : %s", var))
-            question_row <- questions_df[trimws(questions_df$VariableName) == var, ]
-            if (nrow(question_row) > 0) {
-              cfi <- question_row$CascadeFromQuestionId
-              print(sprintf("CascadeFromQuestionId pour %s : %s", var, cfi))
-              parent_var <- key_to_varname[[cfi]]
-              if (!is.null(parent_var)) {
-                tidy_nomenclature$parent_variable[tidy_nomenclature$variable_name == var] <- parent_var
-                cat(sprintf("Variable : %s, Parent : %s\n", var, parent_var))
-              } else {
-                cat(sprintf("CascadeFromQuestionId %s non trouvé dans key_to_varname pour la variable %s\n", cfi, var))
-              }
-            } else {
-              cat(sprintf("Variable %s non trouvée dans questions_df\n", var))
-            }
-          }
-
-        } else {
-          warning("Le document JSON ne contient pas de questions sous 'Children'.")
-        }
-      }
-    }
-  }
-
   # Retourner le tableau 'tidy_nomenclature' mis à jour
   return(tidy_nomenclature)
 }
+

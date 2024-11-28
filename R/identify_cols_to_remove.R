@@ -35,6 +35,8 @@
 #' # English example
 #' cols_to_remove <- identify_cols_to_remove(data)
 #' }
+
+
 identify_cols_to_remove <- function(data) {
   data %>%
     select(where(is.numeric), where(is.character)) %>%

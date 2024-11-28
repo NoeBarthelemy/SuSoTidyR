@@ -203,6 +203,7 @@ ESS_2024_labeled <- ESS_2024_NA_clean %>%
   values_to_labels(nomenclature_clean, columns = "all")
 ```
 
+
 ## Contributions
 
 Contributions are welcome! If you have suggestions, ideas for improvement, or if you encounter any issues, feel free to create an issue or submit a pull request on GitHub.

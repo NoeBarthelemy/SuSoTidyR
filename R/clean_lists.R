@@ -81,6 +81,8 @@
 #' }
 #'
 #' @export
+
+
 clean_lists <- function(.data, data = NULL, variable_name_col = "variable_name") {
   # Vérifier que .data est un data frame
   if (!is.data.frame(.data)) {
