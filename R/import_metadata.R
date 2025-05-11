@@ -421,23 +421,33 @@ import_metadata <- function(dossier) {
 
           # Boucle de correspondance avec débogage
           for (var in variables_with_parentvalue) {
-            print(sprintf("Traitement de la variable : %s", var))
-            question_row <- questions_df[trimws(questions_df$VariableName) == var, ]
-            if (nrow(question_row) > 0) {
-              cfi <- question_row$CascadeFromQuestionId
-              print(sprintf("CascadeFromQuestionId pour %s : %s", var, cfi))
-              parent_var <- key_to_varname[[cfi]]
-              if (!is.null(parent_var)) {
-                tidy_nomenclature$parent_variable[tidy_nomenclature$variable_name == var] <- parent_var
-                cat(sprintf("Variable : %s, Parent : %s\n", var, parent_var))
-              } else {
-                cat(sprintf("CascadeFromQuestionId %s non trouvé dans key_to_varname pour la variable %s\n", cfi, var))
-              }
-            } else {
-              cat(sprintf("Variable %s non trouvée dans questions_df\n", var))
-            }
-          }
+  print(sprintf("Traitement de la variable : %s", var))
 
+  # PATCH DU 11/05/2025
+  question_row <- questions_df[trimws(questions_df$VariableName) == var, ]
+  if (nrow(question_row) > 0) {
+
+    cfi <- question_row$CascadeFromQuestionId
+    print(sprintf("CascadeFromQuestionId pour %s : %s", var, cfi))
+
+    ## ---------- PATCH anti-NA / clé absente -------------------------
+    if (is.na(cfi) || !cfi %in% names(key_to_varname)) {
+      warning(sprintf(
+        "CascadeFromQuestionId manquant ou introuvable pour '%s' – parent_variable laissé vide.",
+        var
+      ))
+      next             # on passe au var suivant
+    }
+    ## ----------------------------------------------------------------
+
+    parent_var <- key_to_varname[[cfi]]
+    tidy_nomenclature$parent_variable[tidy_nomenclature$variable_name == var] <- parent_var
+    cat(sprintf("Variable : %s, Parent : %s\n", var, parent_var))
+
+  } else {
+    cat(sprintf("Variable %s non trouvée dans questions_df\n", var))
+  }
+}
         } else {
           warning("Le document JSON ne contient pas de questions sous 'Children'.")
         }
